@@ -77,11 +77,13 @@ export interface Product {
   // Joined or derived fields:
   category?: Category;
   images?: ProductImage[];
+  product_images?: ProductImage[];
   inventory?: Inventory;
   availability?: ProductAvailability;
 }
 
 export interface ProductAvailability {
+  product_id?: string;
   status: ProductStatus;
   available_quantity: number;
   unit: string;
@@ -90,6 +92,8 @@ export interface ProductAvailability {
   expected_available_at?: string | null;
   available_from?: string | null;
   available_until?: string | null;
+  season_start_month?: number | null;
+  season_end_month?: number | null;
   lead_time_days_min?: number | null;
   lead_time_days_max?: number | null;
 }

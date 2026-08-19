@@ -130,6 +130,26 @@ export const ChickensView: React.FC<ChickensViewProps> = ({ onNavigate }) => {
           {page?.content}
         </div>
 
+        {/* Added requested egg sales info section */}
+        <div className="mt-8 pt-8 border-t border-[#E8E6E1] space-y-6 text-[#2D2D2A]">
+          <p className="text-sm sm:text-base leading-relaxed">
+            Vejce z lokálního malochovu v Robči, pečlivě ručně sbíraná a připravená k osobnímu odběru přímo ze dvora. Naše slepice žijí spokojeným životem s celodenním přístupem k čerstvé zelené trávě, což dává žloutkům nezaměnitelnou sytou barvu a skvělou chuť.
+          </p>
+
+          <div className="bg-[#F7F5F0] rounded-2xl p-6 border border-[#E8E6E1] space-y-3">
+            <h3 className="font-serif italic text-lg font-bold text-[#2D2D2A]">
+              Důležité informace o prodeji vajec:
+            </h3>
+            <ul className="space-y-2 text-xs sm:text-sm text-[#6D6D66]">
+              <li><strong>Původ:</strong> Robečský rodinný malochov, Česká republika.</li>
+              <li><strong>Způsob chovu:</strong> Volný výběh na travnatém sadu s přírodním krmením bez GMO.</li>
+              <li><strong>Skladování:</strong> Skladujte v chladu od +5 °C do +12 °C, nevystavujte slunci a vlhku.</li>
+              <li><strong>Datum snášky:</strong> Vždy vyznačeno na obalu při převzetí (garantujeme maximální čerstvost).</li>
+              <li><strong>Úřední upozornění:</strong> Registrovaný malochov pod evidenčním číslem chovu CZ-XXXXXXXX. Prodej ze dvora v souladu s platnými veterinárními předpisy ČR.</li>
+            </ul>
+          </div>
+        </div>
+
         <div className="pt-8 border-t border-[#E8E6E1] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h4 className="font-serif italic text-lg font-bold text-[#2D2D2A]">

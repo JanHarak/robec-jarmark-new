@@ -1,6 +1,6 @@
 {
-  "name": "Digitální Hospodářství",
-  "description": "Moderní digitální katalog, rezervační systém, předobjednávky a správa malého venkovského hospodářství se Supabase backendem.",
+  "name": "Robečský jarmark",
+  "description": "Digitální katalog produktů, poctivá domácí vejce z volného výběhu, včelí med a rezervace přímo z Robečského jarmarku.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -33,14 +33,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
           className="flex items-center gap-3 text-left focus:outline-hidden group"
         >
           <div className="w-10 h-10 bg-[#5A5A40] rounded-full flex items-center justify-center text-[#FDFCFB] font-serif text-xl italic group-hover:bg-[#2D2D2A] transition-colors">
-            H
+            R
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-widest uppercase text-[#2D2D2A]">
-              Naše Hospodářství
+              Robečský jarmark
             </h1>
             <p className="text-[10px] text-[#8A8A80] uppercase tracking-wider">
-              Digitální katalog produktů
+              S láskou ze dvora
             </p>
           </div>
         </button>
@@ -68,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
           })}
         </nav>
 
-        {/* Action Controls & Cart Button */}
+        {/* Action Controls & Cart Icon with Bouncing Indicator */}
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="hidden lg:block text-right">
             <p className="text-[10px] text-[#8A8A80] uppercase tracking-wider">Dnešní odběr</p>
@@ -89,13 +89,19 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
             <span className="hidden xl:inline text-[10px]">Admin</span>
           </button>
 
+          {/* Cart Icon Button with Bouncing Indicator */}
           <button
             id="cart-trigger-button"
             onClick={() => setIsDrawerOpen(true)}
-            className="bg-[#5A5A40] text-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-full hover:bg-[#2D2D2A] transition-colors shadow-xs flex items-center gap-2"
+            className="relative p-3 bg-[#5A5A40] hover:bg-[#2D2D2A] text-white rounded-full transition-colors shadow-xs flex items-center justify-center"
+            aria-label="Košík"
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span>Košík ({totalItemsCount})</span>
+            <ShoppingBag className="w-4 h-4" />
+            {totalItemsCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-[#B25E09] text-white font-bold text-[10px] rounded-full flex items-center justify-center animate-bounce shadow-sm border border-white">
+                {totalItemsCount}
+              </span>
+            )}
           </button>
 
           {/* Mobile menu trigger */}

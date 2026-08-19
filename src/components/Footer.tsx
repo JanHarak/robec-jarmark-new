@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, MapPin, Phone, Mail } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (path: string) => void;
@@ -13,14 +13,14 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-[#5A5A40] rounded-full flex items-center justify-center text-[#FDFCFB] font-serif text-xs italic">
-              H
+              R
             </div>
             <span className="font-bold uppercase tracking-widest text-[#2D2D2A]">
-              Naše Hospodářství
+              Robečský jarmark
             </span>
           </div>
           <p className="text-xs text-[#6D6D66] leading-relaxed">
-            Malé rodinné hospodářství. Poctivá vajíčka od slepic z volného výběhu, sezónní ovoce, včelí med a čerstvé domácí pečení.
+            Malé rodinné hospodářství a tržiště. Poctivá vajíčka od slepic z volného výběhu, sezónní ovoce, včelí med a čerstvé domácí pečení.
           </p>
         </div>
 
@@ -29,7 +29,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             Odběr ze dvora
           </span>
           <p className="text-xs text-[#6D6D66] leading-relaxed">
-            Adresa: Pod Strání 12, Lhota<br />
+            Adresa: Robečská 14, Lhota<br />
             Čtvrtek & Pátek: 14:00 — 17:00<br />
             Sobota: 09:00 — 12:00
           </p>
@@ -41,7 +41,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </span>
           <p className="text-xs text-[#6D6D66] leading-relaxed">
             Telefon: <a href="tel:+420777123456" className="text-[#2D2D2A] font-medium">+420 777 123 456</a><br />
-            E-mail: <a href="mailto:hospodar@lucnidvur.cz" className="text-[#2D2D2A] font-medium">hospodar@lucnidvur.cz</a>
+            E-mail: <a href="mailto:hospodar@robeskyjarmark.cz" className="text-[#2D2D2A] font-medium">hospodar@robeskyjarmark.cz</a>
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
       {/* Lower Copyright bar */}
       <div className="border-t border-[#E8E6E1] px-6 lg:px-10 py-5">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-[10px] uppercase tracking-widest">
-          <div>© {new Date().getFullYear()} Naše Hospodářství • Ručně a s úctou k přírodě</div>
+          <div>© {new Date().getFullYear()} Robečský jarmark • Ručně a s úctou k přírodě</div>
           <div>Poháněno Supabase backendem & RLS</div>
         </div>
       </div>

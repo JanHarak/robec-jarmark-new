@@ -36,11 +36,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onNavigate, initialCat
     load();
   }, []);
 
-  // Filter products locally for instant response
+  // Filter products locally with robust category matching (ID or slug)
   const filteredProducts = products.filter((product) => {
     // Category match
-    if (selectedCategoryId !== 'all' && product.category_id !== selectedCategoryId) {
-      return false;
+    if (selectedCategoryId !== 'all') {
+      const matchCategory =
+        product.category_id === selectedCategoryId ||
+        product.category?.id === selectedCategoryId ||
+        product.category?.slug === selectedCategoryId;
+      if (!matchCategory) return false;
     }
 
     // Status filter match
@@ -180,8 +184,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onNavigate, initialCat
             Všechny ({products.length})
           </button>
           {categories.map((cat) => {
-            const count = products.filter((p) => p.category_id === cat.id).length;
-            const isSelected = selectedCategoryId === cat.id;
+            const count = products.filter((p) =>
+              p.category_id === cat.id ||
+              p.category?.id === cat.id ||
+              p.category?.slug === cat.slug ||
+              p.category?.slug === cat.id
+            ).length;
+            const isSelected = selectedCategoryId === cat.id || selectedCategoryId === cat.slug;
             return (
               <button
                 key={cat.id}

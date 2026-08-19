@@ -1,131 +1,83 @@
-import { getSupabase } from '../lib/supabase/client';
-import { CreateOrderParams, CreateOrderResult, Order, OrderType, OrderStatus } from '../types/database';
-import { initialOrders, initialProducts } from './mockData';
-import { updateLocalProductInventory } from './products';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { Order, OrderStatus } from '../types/database';
 
-let localOrders: Order[] = [...initialOrders];
+let localOrders: Order[] = [];
 
-export const createOrder = async (params: CreateOrderParams): Promise<CreateOrderResult> => {
-  // 1. Validation
-  if (!params.p_customer_name?.trim()) {
-    throw new Error('Prosím zadejte vaše jméno a příjmení.');
-  }
-  if (!params.p_customer_email?.trim() || !params.p_customer_email.includes('@')) {
-    throw new Error('Prosím zadejte platnou e-mailovou adresu.');
-  }
-  if (!params.p_items || params.p_items.length === 0) {
-    throw new Error('Objednávka neobsahuje žádné položky.');
-  }
+export interface CreateOrderItem {
+  product_id: string;
+  quantity: number;
+}
 
-  const supabase = getSupabase();
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.rpc('create_order', {
-        p_customer_name: params.p_customer_name.trim(),
-        p_customer_email: params.p_customer_email.trim(),
-        p_customer_phone: params.p_customer_phone?.trim() || null,
-        p_customer_note: params.p_customer_note?.trim() || null,
-        p_items: params.p_items,
-      });
+export interface CreateOrderInput {
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerNote?: string;
+  p_customer_name?: string;
+  p_customer_email?: string;
+  p_customer_phone?: string;
+  p_customer_note?: string;
+  items?: CreateOrderItem[];
+  p_items?: CreateOrderItem[];
+}
 
-      if (error) {
-        throw new Error(error.message || 'Chyba při vytváření rezervace.');
-      }
+export async function createOrder(input: CreateOrderInput) {
+  const configured = isSupabaseConfigured();
 
-      if (data) {
-        return data as CreateOrderResult;
-      }
-    } catch (err: any) {
-      console.warn('RPC create_order call encountered error or Supabase not reachable:', err);
-      // If RPC failed due to validation or logic from database, rethrow
-      if (err.message && !err.message.includes('fetch') && !err.message.includes('network')) {
-        throw err;
-      }
-    }
-  }
+  const cName = input.customerName || input.p_customer_name || '';
+  const cEmail = input.customerEmail || input.p_customer_email || '';
+  const cPhone = input.customerPhone || input.p_customer_phone;
+  const cNote = input.customerNote || input.p_customer_note;
+  const cItems = input.items || input.p_items || [];
 
-  // Fallback local logic conforming exactly to RPC business rules
-  let calculatedTotalPrice = 0;
-  let hasReservation = false;
-  let hasPreorder = false;
-  let hasMadeToOrder = false;
+  if (configured) {
+    const { data, error } = await supabase.rpc('create_order', {
+      p_customer_name: cName,
+      p_customer_email: cEmail,
+      p_customer_phone: cPhone ?? null,
+      p_customer_note: cNote ?? null,
+      p_items: cItems,
+    });
 
-  const orderItemsData = params.p_items.map((item, idx) => {
-    const product = initialProducts.find((p) => p.id === item.product_id);
-    if (!product) {
-      throw new Error(`Produkt ${item.product_id} nebyl nalezen.`);
+    if (error) {
+      throw error;
     }
 
-    if (item.quantity <= 0) {
-      throw new Error(`Neplatné množství pro položku ${product.name}.`);
-    }
-
-    let itemType: 'reservation' | 'preorder' | 'made_to_order' = 'reservation';
-    if (product.is_made_to_order) {
-      itemType = 'made_to_order';
-      hasMadeToOrder = true;
-    } else if (product.allow_preorder && (product.is_seasonal || (product.inventory?.quantity_on_hand || 0) <= 0)) {
-      itemType = 'preorder';
-      hasPreorder = true;
-    } else {
-      itemType = 'reservation';
-      hasReservation = true;
-      // Reserve inventory locally
-      updateLocalProductInventory(product.id, 0, item.quantity);
-    }
-
-    const subtotal = product.price * item.quantity;
-    calculatedTotalPrice += subtotal;
-
-    return {
-      id: `item-${Date.now()}-${idx}`,
-      product_id: product.id,
-      product_name: product.name,
-      quantity: item.quantity,
-      unit_price: product.price,
-      total_price: subtotal,
-      item_type: itemType,
-      unit: product.unit,
-    };
-  });
-
-  let determinedType: OrderType = 'reservation';
-  const typeCount = (hasReservation ? 1 : 0) + (hasPreorder ? 1 : 0) + (hasMadeToOrder ? 1 : 0);
-  if (typeCount > 1) {
-    determinedType = 'mixed';
-  } else if (hasPreorder) {
-    determinedType = 'preorder';
-  } else if (hasMadeToOrder) {
-    determinedType = 'reservation';
+    return data;
   }
 
-  const generatedOrderNumber = `R-2026-${String(localOrders.length + 43).padStart(5, '0')}`;
+  // Local fallback for preview
   const newOrder: Order = {
     id: `ord-${Date.now()}`,
-    order_number: generatedOrderNumber,
-    type: determinedType,
+    order_number: `R-2026-${Math.floor(10000 + Math.random() * 90000)}`,
+    type: 'reservation',
     status: 'pending',
-    customer_name: params.p_customer_name.trim(),
-    customer_email: params.p_customer_email.trim(),
-    customer_phone: params.p_customer_phone?.trim(),
-    customer_note: params.p_customer_note?.trim(),
-    total_price: calculatedTotalPrice,
+    customer_name: cName,
+    customer_email: cEmail,
+    customer_phone: cPhone || null,
+    customer_note: cNote || null,
+    total_price: 250,
+    expected_ready_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    pickup_info: 'Výdej ze dvora Robeč',
+    admin_notes: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    items: orderItemsData,
+    items: cItems.map((it, idx) => ({
+      id: `item-${Date.now()}-${idx}`,
+      order_id: `ord-${Date.now()}`,
+      product_id: it.product_id,
+      product_name: 'Položka rezervace',
+      quantity: it.quantity,
+      unit_price: 85,
+      total_price: it.quantity * 85,
+      item_type: 'reservation',
+      unit: 'ks',
+    })),
   };
 
   localOrders.unshift(newOrder);
-
-  return {
-    order_id: newOrder.id,
-    order_number: newOrder.order_number,
-    status: newOrder.status,
-    type: newOrder.type,
-    total_price: newOrder.total_price,
-    message: 'Rezervace byla úspěšně přijata a čeká na potvrzení hospodářem.',
-  };
-};
+  return newOrder;
+}
 
 export const getLocalOrders = () => localOrders;
 export const setLocalOrders = (orders: Order[]) => {

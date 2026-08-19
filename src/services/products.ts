@@ -1,35 +1,143 @@
-import { getSupabase } from '../lib/supabase/client';
+import { supabase, isSupabaseConfigured, getPublicImageUrl } from '../lib/supabase';
 import { Category, Product, ProductAvailability } from '../types/database';
 import { initialCategories, initialProducts, computeMockAvailability } from './mockData';
+import { getCategories } from './categories';
 
-// Local cache/store for reactive preview mode
-let localProducts = [...initialProducts];
-let localCategories = [...initialCategories];
+export async function getProducts(categoryId?: string, statusFilter?: string): Promise<Product[]> {
+  const configured = isSupabaseConfigured();
+  let productsList: Product[] = [];
 
-export const getCategories = async (): Promise<Category[]> => {
-  const supabase = getSupabase();
-  if (!supabase) {
-    return localCategories.filter((c) => c.is_active).sort((a, b) => a.sort_order - b.sort_order);
+  if (configured) {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          category:categories (
+            id,
+            name,
+            slug
+          ),
+          product_images (
+            id,
+            storage_path,
+            alt_text,
+            sort_order,
+            is_cover
+          ),
+          inventory:inventory(*)
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) {
+        productsList = data as Product[];
+      }
+    } catch (err) {
+      console.error('getProducts error:', err);
+      throw err;
+    }
+  } else {
+    productsList = initialProducts.filter((p) => p.is_active);
   }
 
-  try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true });
+  let hydrated = await Promise.all(
+    productsList.map(async (prod) => {
+      const cat = prod.category || initialCategories.find((c) => c.id === prod.category_id);
+      const avail = await getProductAvailability(prod.id, prod);
+      
+      const images = (prod.product_images || prod.images || []).map((img: any) => ({
+        ...img,
+        url: img.storage_path ? getPublicImageUrl(img.storage_path) : (img.url || '')
+      }));
 
-    if (error) throw error;
-    return (data as Category[]) || [];
-  } catch (err) {
-    console.warn('Supabase query failed, falling back to local categories:', err);
-    return localCategories.filter((c) => c.is_active).sort((a, b) => a.sort_order - b.sort_order);
+      return {
+        ...prod,
+        category: cat,
+        images,
+        availability: avail,
+      };
+    })
+  );
+
+  if (categoryId && categoryId !== 'all') {
+    hydrated = hydrated.filter((p) =>
+      p.category_id === categoryId ||
+      p.category?.id === categoryId ||
+      p.category?.slug === categoryId
+    );
   }
-};
 
-export const getProductAvailability = async (productId: string, fallbackProduct?: Product): Promise<ProductAvailability> => {
-  const supabase = getSupabase();
-  if (supabase) {
+  if (statusFilter && statusFilter !== 'all') {
+    hydrated = hydrated.filter((p) => p.availability?.status === statusFilter);
+  }
+
+  return hydrated;
+}
+
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  const configured = isSupabaseConfigured();
+
+  if (configured) {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          category:categories (
+            id,
+            name,
+            slug
+          ),
+          product_images (
+            id,
+            storage_path,
+            alt_text,
+            sort_order,
+            is_cover
+          ),
+          inventory:inventory(*)
+        `)
+        .eq('slug', slug)
+        .eq('is_active', true)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        const prod = data as Product;
+        const avail = await getProductAvailability(prod.id, prod);
+        const images = (prod.product_images || prod.images || []).map((img: any) => ({
+          ...img,
+          url: img.storage_path ? getPublicImageUrl(img.storage_path) : (img.url || '')
+        }));
+        return {
+          ...prod,
+          images,
+          availability: avail,
+        };
+      }
+    } catch (err) {
+      console.warn('getProductBySlug error:', err);
+    }
+  }
+
+  const prod = initialProducts.find((p) => p.slug === slug && p.is_active);
+  if (!prod) return null;
+
+  const cat = initialCategories.find((c) => c.id === prod.category_id);
+  const avail = await getProductAvailability(prod.id, prod);
+
+  return {
+    ...prod,
+    category: cat,
+    availability: avail,
+  };
+}
+
+export async function getProductAvailability(productId: string, fallbackProduct?: Product): Promise<ProductAvailability> {
+  const configured = isSupabaseConfigured();
+  if (configured) {
     try {
       const { data, error } = await supabase.rpc('get_product_availability', {
         p_product_id: productId,
@@ -39,132 +147,35 @@ export const getProductAvailability = async (productId: string, fallbackProduct?
         return data as ProductAvailability;
       }
     } catch (err) {
-      console.warn('RPC get_product_availability failed, falling back to calculation:', err);
+      console.warn('RPC get_product_availability failed:', err);
     }
   }
 
-  const prod = fallbackProduct || localProducts.find((p) => p.id === productId);
+  const prod = fallbackProduct || initialProducts.find((p) => p.id === productId);
   if (!prod) {
     return {
+      product_id: productId,
       status: 'unavailable',
       available_quantity: 0,
       unit: 'ks',
       allow_preorder: false,
+      preorder_remaining: null,
+      expected_available_at: null,
+      available_from: null,
+      available_until: null,
+      season_start_month: null,
+      season_end_month: null,
+      lead_time_days_min: null,
+      lead_time_days_max: null,
     };
   }
 
   return computeMockAvailability(prod);
-};
+}
 
-export const getProducts = async (categoryId?: string, statusFilter?: string): Promise<Product[]> => {
-  const supabase = getSupabase();
-
-  let productsList: Product[] = [];
-
-  if (supabase) {
-    try {
-      let query = supabase
-        .from('products')
-        .select(`
-          *,
-          category:categories(*),
-          images:product_images(*),
-          inventory:inventory(*)
-        `)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
-
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
-      }
-
-      const { data, error } = await query;
-      if (!error && data) {
-        productsList = data as Product[];
-      }
-    } catch (err) {
-      console.warn('Supabase query failed, falling back to local products:', err);
-    }
-  }
-
-  if (productsList.length === 0) {
-    productsList = localProducts.filter((p) => p.is_active);
-    if (categoryId) {
-      productsList = productsList.filter((p) => p.category_id === categoryId);
-    }
-  }
-
-  // Attach category and availability
-  const hydrated = await Promise.all(
-    productsList.map(async (prod) => {
-      const cat = prod.category || localCategories.find((c) => c.id === prod.category_id);
-      const avail = await getProductAvailability(prod.id, prod);
-      return {
-        ...prod,
-        category: cat,
-        availability: avail,
-      };
-    })
-  );
-
-  if (statusFilter && statusFilter !== 'all') {
-    return hydrated.filter((p) => p.availability?.status === statusFilter);
-  }
-
-  return hydrated;
-};
-
-export const getFeaturedProducts = async (): Promise<Product[]> => {
+export async function getFeaturedProducts(): Promise<Product[]> {
   const all = await getProducts();
   return all.filter((p) => p.is_featured);
-};
+}
 
-export const getProductBySlug = async (slug: string): Promise<Product | null> => {
-  const supabase = getSupabase();
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          category:categories(*),
-          images:product_images(*),
-          inventory:inventory(*)
-        `)
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single();
-
-      if (!error && data) {
-        const prod = data as Product;
-        const avail = await getProductAvailability(prod.id, prod);
-        return {
-          ...prod,
-          availability: avail,
-        };
-      }
-    } catch (err) {
-      console.warn('Failed to load product by slug from Supabase:', err);
-    }
-  }
-
-  const prod = localProducts.find((p) => p.slug === slug && p.is_active);
-  if (!prod) return null;
-
-  const cat = localCategories.find((c) => c.id === prod.category_id);
-  const avail = await getProductAvailability(prod.id, prod);
-
-  return {
-    ...prod,
-    category: cat,
-    availability: avail,
-  };
-};
-
-export const updateLocalProductInventory = (productId: string, onHandDelta: number, reservedDelta: number) => {
-  const target = localProducts.find((p) => p.id === productId);
-  if (target && target.inventory) {
-    target.inventory.quantity_on_hand = Math.max(0, target.inventory.quantity_on_hand + onHandDelta);
-    target.inventory.quantity_reserved = Math.max(0, target.inventory.quantity_reserved + reservedDelta);
-  }
-};
+export { getCategories };

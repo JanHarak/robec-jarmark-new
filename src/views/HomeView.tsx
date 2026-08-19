@@ -7,12 +7,12 @@ import {
   ArrowRight,
   Calendar,
   Clock,
-  Egg,
-  Sparkles,
   ChevronRight,
-  Sun,
+  MapPin,
+  Sparkles,
   ShieldCheck,
   HeartHandshake,
+  Leaf,
 } from 'lucide-react';
 
 interface HomeViewProps {
@@ -43,7 +43,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     loadData();
   }, []);
 
-  // Filter products by section
   const availableProducts = products.filter(
     (p) => p.availability?.status === 'available'
   );
@@ -58,22 +57,20 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     (p) => p.is_made_to_order || p.availability?.status === 'made_to_order'
   );
 
-  const seasonalProducts = products.filter((p) => p.is_seasonal);
-
   return (
     <div className="space-y-12 sm:space-y-16 pb-16">
       {/* Clean Minimalism Hero Section */}
       <section className="px-6 lg:px-10 py-10 sm:py-14 flex flex-col lg:flex-row gap-8 lg:gap-12 items-center bg-[#F7F5F0] border-b border-[#E8E6E1]">
         <div className="flex-1 space-y-6">
           <span className="text-[11px] font-bold text-[#8A9A5B] uppercase tracking-[0.2em] block">
-            Vítejte u nás na dvoře
+            Vítejte na Robečském jarmarku
           </span>
           <h1 className="font-serif italic text-4xl sm:text-5xl lg:text-6xl text-[#2D2D2A] leading-tight">
             Poctivá vajíčka a domácí <br className="hidden sm:inline" />
-            výrobky z podhůří.
+            výrobky z Robče.
           </h1>
           <p className="text-[#6D6D66] text-sm sm:text-base max-w-lg leading-relaxed">
-            Nejsme anonymní e-shop. Jsme malé rodinné hospodářství. Na tomto webu najdete to, co jsme právě sklidili, vyrobili nebo co pro vás teprve s láskou chystáme.
+            Nejsme anonymní e-shop. Jsme malé rodinné hospodářství a tržiště. Na tomto webu najdete to, co jsme právě sklidili, vyrobili nebo co pro vás teprve s láskou chystáme.
           </p>
 
           <div className="flex flex-wrap gap-4 pt-2">
@@ -328,6 +325,83 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             </div>
           </section>
         )}
+
+        {/* Section 6: Naše hodnoty */}
+        <section className="space-y-8 bg-[#F7F5F0] -mx-6 sm:-mx-10 p-6 sm:p-12 rounded-3xl border border-[#E8E6E1]">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8A9A5B] block">
+              Naše hodnoty
+            </span>
+            <h2 className="font-serif italic text-3xl sm:text-4xl font-bold text-[#2D2D2A]">
+              Proč nakoupit právě u nás?
+            </h2>
+            <p className="text-xs sm:text-sm text-[#6D6D66] leading-relaxed">
+              U nás v Robči věříme, že poctivá práce, úcta k přírodě a sousedská důvěra dělají jídlo lepším a život spokojenějším.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+            {/* 1. Lokální původ */}
+            <div className="bg-white p-6 rounded-2xl border border-[#E8E6E1] space-y-3 shadow-xs flex flex-col justify-between">
+              <div className="w-10 h-10 rounded-full bg-[#E8F0FE] text-[#1967D2] flex items-center justify-center font-bold">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-serif italic text-lg font-bold text-[#2D2D2A]">
+                  Lokální původ
+                </h3>
+                <p className="text-xs text-[#6D6D66] leading-relaxed">
+                  Všechny produkty pocházejí přímo z naší zahrady, sadu a malochovu v Robči, případně od prověřených sousedních chovatelů v okolí.
+                </p>
+              </div>
+            </div>
+
+            {/* 2. Čerstvé suroviny */}
+            <div className="bg-white p-6 rounded-2xl border border-[#E8E6E1] space-y-3 shadow-xs flex flex-col justify-between">
+              <div className="w-10 h-10 rounded-full bg-[#E6F4EA] text-[#1E7E34] flex items-center justify-center font-bold">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-serif italic text-lg font-bold text-[#2D2D2A]">
+                  Čerstvé suroviny
+                </h3>
+                <p className="text-xs text-[#6D6D66] leading-relaxed">
+                  Vajíčka sbíráme každé ráno. Ovoce do džemů a bylinky do esencí sklízíme v optimální zralosti, abychom uchovali maximum chuti a vůně.
+                </p>
+              </div>
+            </div>
+
+            {/* 3. Poctivá ruční výroba */}
+            <div className="bg-white p-6 rounded-2xl border border-[#E8E6E1] space-y-3 shadow-xs flex flex-col justify-between">
+              <div className="w-10 h-10 rounded-full bg-[#FFF4E5] text-[#B25E09] flex items-center justify-center font-bold">
+                <Leaf className="w-5 h-5" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-serif italic text-lg font-bold text-[#2D2D2A]">
+                  Poctivá ruční výroba
+                </h3>
+                <p className="text-xs text-[#6D6D66] leading-relaxed">
+                  Nepoužíváme polotovary, chemické konzervanty ani barviva. Každý džem, mýdlo i koláč je výsledkem trpělivé ruční práce a rodinných receptů.
+                </p>
+              </div>
+            </div>
+
+            {/* 4. Osobní přístup */}
+            <div className="bg-white p-6 rounded-2xl border border-[#E8E6E1] space-y-3 shadow-xs flex flex-col justify-between">
+              <div className="w-10 h-10 rounded-full bg-[#F3E8FF] text-[#6B21A8] flex items-center justify-center font-bold">
+                <HeartHandshake className="w-5 h-5" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-serif italic text-lg font-bold text-[#2D2D2A]">
+                  Osobní přístup
+                </h3>
+                <p className="text-xs text-[#6D6D66] leading-relaxed">
+                  Nákup u nás probíhá jako setkání sousedů. Rádi vám ukážeme naše slepice, popovídáme o výrobě a předáme produkty s upřímným úsměvem.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
